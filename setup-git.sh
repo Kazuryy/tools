@@ -68,14 +68,21 @@ collect_user_info() {
     [[ -z "$GIT_EMAIL" ]] && error "L'email ne peut pas être vide."
 
     while true; do
-        read -rp "URL SSH du dépôt (ex: gitea@gitea.mon-domaine.com:org/repo.git) : " REPO_SSH_URL
+        read -rp "URL SSH du dépôt (ex: gitea@host:org/repo.git  ou  ssh://git@host:2222/org/repo.git) : " REPO_SSH_URL
         [[ -z "$REPO_SSH_URL" ]] && { warn "L'URL ne peut pas être vide."; continue; }
-        [[ "$REPO_SSH_URL" == *@*:* ]] && break
-        warn "URL invalide — format attendu : user@host:org/repo.git"
+        if [[ "$REPO_SSH_URL" =~ ^ssh://([^@]+)@([^:/]+)(:([0-9]+))?/(.+)$ ]]; then
+            SSH_USER="${BASH_REMATCH[1]}"
+            SSH_HOST="${BASH_REMATCH[2]}"
+            URL_PORT="${BASH_REMATCH[4]}"
+            break
+        elif [[ "$REPO_SSH_URL" =~ ^([^@]+)@([^:]+):.+ ]]; then
+            SSH_USER="${BASH_REMATCH[1]}"
+            SSH_HOST="${BASH_REMATCH[2]}"
+            URL_PORT=""
+            break
+        fi
+        warn "URL invalide — formats acceptés : user@host:org/repo.git  ou  ssh://user@host:port/org/repo.git"
     done
-
-    SSH_USER=$(echo "$REPO_SSH_URL" | cut -d@ -f1)
-    SSH_HOST=$(echo "$REPO_SSH_URL" | cut -d@ -f2 | cut -d: -f1)
 
     read -rp "Votre nom d'utilisateur Gitea (login du compte, ex: alice) : " GITEA_USERNAME
     GITEA_USERNAME=$(echo "$GITEA_USERNAME" | tr '[:upper:]' '[:lower:]')
@@ -83,11 +90,13 @@ collect_user_info() {
     SSH_KEY_PATH="$HOME/.ssh/id_ed25519_gitea_${GITEA_USERNAME}"
     info "Clé SSH : $SSH_KEY_PATH"
 
-    if [[ "$SKIP_SSH" != "y" ]]; then
+    if [[ -n "$URL_PORT" ]]; then
+        GITEA_SSH_PORT="$URL_PORT"
+        info "Port SSH extrait de l'URL : $GITEA_SSH_PORT"
+    elif [[ "$SKIP_SSH" != "y" ]]; then
         read -rp "Port SSH de Gitea [22] : " GITEA_SSH_PORT
         GITEA_SSH_PORT="${GITEA_SSH_PORT:-22}"
     else
-        # On tente de lire le port depuis ~/.ssh/config si disponible
         EXISTING_PORT=$(grep -A5 "Host $SSH_HOST" "$HOME/.ssh/config" 2>/dev/null | grep Port | awk '{print $2}' | head -1)
         GITEA_SSH_PORT="${EXISTING_PORT:-22}"
         info "Port SSH détecté depuis ~/.ssh/config : $GITEA_SSH_PORT"
