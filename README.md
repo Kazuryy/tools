@@ -17,10 +17,12 @@ Configure une clé SSH, `~/.ssh/config`, le clone d'un dépôt et la signature d
 ### Téléchargement rapide
 
 ```bash
-# curl
+# avec curl
 curl -fsSL https://raw.githubusercontent.com/Kazuryy/tools/develop/setup-git.sh -o setup-git.sh
+```
 
-# wget
+```bash
+# avec wget
 wget -q https://raw.githubusercontent.com/Kazuryy/tools/develop/setup-git.sh
 ```
 
