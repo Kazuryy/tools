@@ -14,6 +14,16 @@ Configure une clé SSH, `~/.ssh/config`, le clone d'un dépôt et la signature d
 - `ssh-keygen` (sauf si l'étape SSH est sautée)
 - `gpg` (uniquement si vous choisissez la signature GPG)
 
+### Téléchargement rapide
+
+```bash
+# curl
+curl -fsSL https://raw.githubusercontent.com/Kazuryy/tools/develop/setup-git.sh -o setup-git.sh
+
+# wget
+wget -q https://raw.githubusercontent.com/Kazuryy/tools/develop/setup-git.sh
+```
+
 ### Usage
 
 ```bash
